@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Application Configuration
+MetroNetra — Application Configuration
 All thresholds and settings are loaded from environment variables.
 No magic numbers are scattered through service code.
 """
@@ -10,13 +10,13 @@ import os
 
 class Settings(BaseSettings):
     # ── App ──────────────────────────────────────────────────────────────────
-    app_name: str = "LEGALMET AI"
+    app_name: str = "MetroNetra"
     app_env: str = "development"
     debug: bool = True
     secret_key: str = "CHANGE_ME_IN_PRODUCTION_MIN_32_CHARS_STRONG_KEY"
 
     # ── Database ──────────────────────────────────────────────────────────────
-    database_url: str = "sqlite:///./legalmet_ai.db"
+    database_url: str = "sqlite:///./metronetra.db"
 
     # ── File Uploads ──────────────────────────────────────────────────────────
     upload_dir: str = "./data/uploads"
@@ -42,6 +42,10 @@ class Settings(BaseSettings):
 
     # ── Report ────────────────────────────────────────────────────────────────
     reports_dir: str = "./data/reports"
+
+    # ── Feature Flags ─────────────────────────────────────────────────────────
+    enable_font_analysis: bool = True
+    enable_visual_element_detection: bool = True
 
     # ── CORS ──────────────────────────────────────────────────────────────────
     cors_origins: str = "http://localhost:3000,http://localhost:8080,http://127.0.0.1:3000"

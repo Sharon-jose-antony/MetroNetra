@@ -1,5 +1,5 @@
 """
-LEGALMET AI — End-to-End API and Integration Verification Script
+MetroNetra — End-to-End API and Integration Verification Script
 """
 import urllib.request
 import json
@@ -9,14 +9,14 @@ base = os.getenv("API_URL", "http://127.0.0.1:8000")
 
 def test_all():
     print("=" * 60)
-    print("LEGALMET AI — End-to-End Verification Suite")
+    print("MetroNetra — End-to-End Verification Suite")
     print("=" * 60)
 
     # 1. Test root HTML
     req = urllib.request.Request(f"{base}/")
     with urllib.request.urlopen(req) as res:
         html = res.read().decode('utf-8')
-        assert 'LEGALMET AI' in html
+        assert 'MetroNetra' in html
         print(f"[PASS] 1. Root HTML served correctly ({len(html)} bytes)")
 
     # 2. Test login

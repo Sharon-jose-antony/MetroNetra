@@ -1,7 +1,7 @@
 {
-  "name": "legalmet-ai-frontend",
+  "name": "metronetra-frontend",
   "version": "1.0.0",
-  "description": "LEGALMET AI — Legal Metrology Compliance Inspection Platform Inspector Portal (SIH26034)",
+  "description": "MetroNetra — Legal Metrology Compliance Inspection Platform Inspector Portal (SIH26034)",
   "private": true,
   "scripts": {
     "dev": "npx serve -s . -l 3000",

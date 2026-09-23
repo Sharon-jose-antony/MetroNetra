@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Pluggable OCR Provider Interface & Multi-Variant Fusion Engine
+MetroNetra — Pluggable OCR Provider Interface & Multi-Variant Fusion Engine
 
 Architecture:
     OCRProvider (abstract)

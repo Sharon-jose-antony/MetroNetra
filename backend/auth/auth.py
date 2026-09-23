@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Authentication utilities
+MetroNetra — Authentication utilities
 Secure password hashing and JWT token generation.
 Uses bcrypt directly to avoid passlib/bcrypt incompatibility on Python 3.14+.
 """

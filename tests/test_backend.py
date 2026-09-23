@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Backend Tests
+MetroNetra — Backend Tests
 Tests for image quality, OCR provider, declaration extractor, and rule engine.
 No real images are required for unit tests — they use mocks and synthetic data.
 """

@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Deterministic Legal Metrology Rule Engine
+MetroNetra — Deterministic Legal Metrology Rule Engine
 Evaluates extracted declarations against the official rules catalog.
 
 Design:

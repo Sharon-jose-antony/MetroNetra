@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Context-Aware Declaration Extractor & Identifier Disambiguation
+MetroNetra — Context-Aware Declaration Extractor & Identifier Disambiguation
 Extracts structured Legal Metrology declarations from multi-pass OCR tokens and text.
 
 Key Architectural Guarantees:
@@ -476,64 +476,307 @@ class ManufactureDateExtractor:
 
         return None
 
-
 class ExpiryDateExtractor:
     """
-    Extracts Best Before / Use By / Expiry Date (Rule 6(1)(d)).
-    Supports: Best Before 6 Months..., Use By: 12/2026, EXP: 04/28, BB: 15/08/2026...
+    Extracts Best Before / Use By / Expiry declarations.
+
+    Handles:
+    - Best Before: 12/2027
+    - Best Before: 12 Months
+    - Best Before 24 Months
+    - Best Before: 24 Months from Mfg
+    - Best Before: 12 Months from Date of Manufacture
+    - Use By: 15/08/2027
+    - Expiry Date: 08/2027
+    - Exp: 08/2027
+    - Expiry: Aug 2027
+    - Use within 6 months from packaging
+    - Shelf Life: 12 months
     """
-    MONTH_ABBR = r'(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
+
+    MONTH_ABBR = (
+        r'(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
+    )
+
     DATE_FORMATS = (
         r'\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}'
         r'|\d{1,2}[\/\.\-]\d{2,4}'
         r'|' + MONTH_ABBR + r'[\s\-\/]*\d{2,4}'
     )
 
-    PATTERNS = [
-        r'(?:best\s+before|use\s+by|expiry(?:\s+date)?|exp(?:iry|\.)?(?:\s+date)?|bb[:\.]?)\s*[:\-]?\s*(' + DATE_FORMATS + r')',
-        r'(?:best\s+before\s+|use\s+by\s+|use\s+before\s+)?(\d+\s*months?\s+(?:from|trom|of)\s+(?:pkg|pkd|mfg|mfd|packaging|manufacture|packing|date\s+of\s+packaging|date\s+of\s+mfg))',
-        r'(\d+\s*months?\s+(?:from|trom|of)\s+(?:pkg|pkd|mfg|mfd|packaging|manufacture|packing))',
-        r'(?:best\s+before\s+)?(\d+\s*months?\s+(?:from|trom)\s+[a-z\s]+)',
-        r'([A-Za-z0-9\s]*months?\s+(?:from|trom)\s+pack[a-z]+)',
-        r'(konihs\s+faomupackaging|[a-z\s]*(?:from|trom)\s*pack[a-z]+)',
-    ]
+    # Labels commonly found on Indian packages.
+    EXPIRY_LABEL = (
+        r'(?:'
+        r'best\s*before'
+        r'|best\s*bef(?:ore)?'
+        r'|use\s*by'
+        r'|use\s*before'
+        r'|use\s*within'
+        r'|expiry'
+        r'|expiry\s*date'
+        r'|exp(?:iry)?\.?'
+        r'|bb'
+        r'|shelf\s*life'
+        r')'
+    )
 
-    def extract(self, tokens: List[OCRToken], full_text: str) -> Optional[ExtractedDeclaration]:
-        # 1. Token by token check
-        for token in tokens:
-            for pat in self.PATTERNS:
-                m = re.search(pat, token.text, re.IGNORECASE)
+    # Direct expiry/best-before date.
+    DIRECT_DATE_PATTERN = (
+        EXPIRY_LABEL
+        + r'\s*[:\-]?\s*'
+        + r'('
+        + DATE_FORMATS
+        + r')'
+    )
+
+    # Best-before duration:
+    # "Best Before 12 Months"
+    # "Best Before 24 Months"
+    DURATION_PATTERN = (
+        EXPIRY_LABEL
+        + r'\s*[:\-]?\s*'
+        r'(\d{1,3}\s*(?:days?|months?|years?))'
+    )
+
+    # Duration with reference:
+    # "Best Before 12 Months from Mfg"
+    # "Best Before 24 Months from Date of Manufacture"
+    # "Use within 6 months from packaging"
+    DURATION_FROM_PATTERN = (
+        EXPIRY_LABEL
+        + r'\s*[:\-]?\s*'
+        r'(\d{1,3}\s*(?:days?|months?|years?)'
+        r'\s+(?:from|after|of)\s+'
+        r'[A-Za-z\s\.]+)'
+    )
+
+    # OCR may omit the label and return:
+    # "12 months from manufacturing"
+    # "24 months from packaging"
+    STANDALONE_DURATION_PATTERN = (
+        r'(\d{1,3}\s*(?:days?|months?|years?)'
+        r'\s+(?:from|after|of)\s+'
+        r'(?:mfg|mfd|manufactur[a-z]*|pack[a-z]*|pkd|packaging|packing))'
+    )
+
+    # "Shelf Life: 12 months"
+    SHELF_LIFE_PATTERN = (
+        r'(?:shelf\s*life|life)\s*[:\-]?\s*'
+        r'(\d{1,3}\s*(?:days?|months?|years?))'
+    )
+
+    @staticmethod
+    def _clean_value(value: str) -> str:
+        """Clean OCR spacing and punctuation."""
+        value = _normalize_text(value)
+        value = re.sub(r'\s*:\s*', ': ', value)
+        return value.strip(' .:-')
+
+    def _make_result(
+        self,
+        value: str,
+        raw: str,
+        confidence: float,
+        token_index: Optional[int] = None,
+    ) -> ExtractedDeclaration:
+
+        value = self._clean_value(value)
+        raw = _normalize_text(raw)
+
+        return ExtractedDeclaration(
+            field="BEST_BEFORE_EXPIRY_DATE",
+            extracted_value=value,
+            raw_ocr_text=raw,
+            normalized_value=value.upper(),
+            extraction_confidence=max(0.80, confidence),
+            source_ocr_token_index=token_index,
+        )
+
+    def extract(
+        self,
+        tokens: List[OCRToken],
+        full_text: str
+    ) -> Optional[ExtractedDeclaration]:
+
+        # ---------------------------------------------------------
+        # 1. FULL OCR TEXT FIRST
+        # ---------------------------------------------------------
+        #
+        # This is important because OCR often splits:
+        #
+        # Best Before
+        # 24 Months from Manufacture
+        #
+        # into separate OCR tokens.
+        #
+        text_norm = _normalize_text(full_text)
+
+        # Direct date:
+        # Best Before: 02/2027
+        # Expiry: 15/08/2027
+        # Use By: Aug 2027
+        m = re.search(
+            self.DIRECT_DATE_PATTERN,
+            text_norm,
+            re.IGNORECASE
+        )
+
+        if m:
+            return self._make_result(
+                value=m.group(1),
+                raw=m.group(0),
+                confidence=0.95
+            )
+
+        # Duration with reference:
+        # Best Before: 24 Months from Date of Manufacture
+        m = re.search(
+            self.DURATION_FROM_PATTERN,
+            text_norm,
+            re.IGNORECASE
+        )
+
+        if m:
+            return self._make_result(
+                value=m.group(1),
+                raw=m.group(0),
+                confidence=0.93
+            )
+
+        # Simple duration:
+        # Best Before: 12 Months
+        # Best Before 2 Years
+        m = re.search(
+            self.DURATION_PATTERN,
+            text_norm,
+            re.IGNORECASE
+        )
+
+        if m:
+            return self._make_result(
+                value=m.group(1),
+                raw=m.group(0),
+                confidence=0.91
+            )
+
+        # Shelf life:
+        # Shelf Life: 12 Months
+        m = re.search(
+            self.SHELF_LIFE_PATTERN,
+            text_norm,
+            re.IGNORECASE
+        )
+
+        if m:
+            return self._make_result(
+                value=m.group(1),
+                raw=m.group(0),
+                confidence=0.90
+            )
+
+        # Label may have been lost by OCR:
+        # 24 Months from Manufacturing
+        # 12 Months from Packaging
+        m = re.search(
+            self.STANDALONE_DURATION_PATTERN,
+            text_norm,
+            re.IGNORECASE
+        )
+
+        if m:
+            return self._make_result(
+                value=m.group(1),
+                raw=m.group(0),
+                confidence=0.86
+            )
+
+        # ---------------------------------------------------------
+        # 2. TOKEN + NEIGHBOURING TOKEN CHECK
+        # ---------------------------------------------------------
+        #
+        # PaddleOCR may produce:
+        #
+        # token 1 = "Best"
+        # token 2 = "Before"
+        # token 3 = "24"
+        # token 4 = "Months"
+        #
+        # So combine nearby tokens and check again.
+        # ---------------------------------------------------------
+
+        if tokens:
+            for i in range(len(tokens)):
+
+                # Check a small local window around each token.
+                start = max(0, i - 1)
+                end = min(len(tokens), i + 5)
+
+                window_tokens = tokens[start:end]
+
+                window_text = " ".join(
+                    _normalize_text(t.text)
+                    for t in window_tokens
+                    if t.text
+                )
+
+                if not window_text:
+                    continue
+
+                # Direct date
+                m = re.search(
+                    self.DIRECT_DATE_PATTERN,
+                    window_text,
+                    re.IGNORECASE
+                )
+
                 if m:
-                    val = m.group(1).strip()
-                    norm_val = val
-                    if 'faomupackaging' in val.lower() or 'pack' in val.lower() or 'trom' in val.lower():
-                        norm_val = "Months from Packaging (Best Before)"
-                    return ExtractedDeclaration(
-                        field="BEST_BEFORE_EXPIRY_DATE",
-                        extracted_value=norm_val,
-                        raw_ocr_text=token.text,
-                        normalized_value=norm_val.upper(),
-                        extraction_confidence=max(0.88, token.confidence),
+                    return self._make_result(
+                        value=m.group(1),
+                        raw=window_text,
+                        confidence=max(
+                            0.82,
+                            min(t.confidence for t in window_tokens)
+                        ),
+                        token_index=i
                     )
 
-        # 2. Normalized full text check
-        text_norm = _normalize_text(full_text)
-        for pat in self.PATTERNS:
-            m = re.search(pat, text_norm, re.IGNORECASE)
-            if m:
-                val = m.group(1).strip()
-                norm_val = val
-                if 'faomupackaging' in val.lower() or 'pack' in val.lower() or 'trom' in val.lower():
-                    norm_val = "Months from Packaging (Best Before)"
-                return ExtractedDeclaration(
-                    field="BEST_BEFORE_EXPIRY_DATE",
-                    extracted_value=norm_val,
-                    raw_ocr_text=m.group(0).strip(),
-                    normalized_value=norm_val.upper(),
-                    extraction_confidence=0.88,
+                # Duration with reference
+                m = re.search(
+                    self.DURATION_FROM_PATTERN,
+                    window_text,
+                    re.IGNORECASE
                 )
-        return None
 
+                if m:
+                    return self._make_result(
+                        value=m.group(1),
+                        raw=window_text,
+                        confidence=max(
+                            0.82,
+                            min(t.confidence for t in window_tokens)
+                        ),
+                        token_index=i
+                    )
+
+                # Simple duration
+                m = re.search(
+                    self.DURATION_PATTERN,
+                    window_text,
+                    re.IGNORECASE
+                )
+
+                if m:
+                    return self._make_result(
+                        value=m.group(1),
+                        raw=window_text,
+                        confidence=max(
+                            0.82,
+                            min(t.confidence for t in window_tokens)
+                        ),
+                        token_index=i
+                    )
+
+        return None
 
 class ConsumerCareExtractor:
     """

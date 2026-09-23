@@ -1,4 +1,4 @@
-# LEGALMET AI — System Architecture & Technical Specifications
+# MetroNetra — System Architecture & Technical Specifications
 
 **SIH Problem Statement ID**: SIH26034  
 **Title**: Software System to check compliance of Packaged Commodities under Legal Metrology (Packaged Commodities) Rules, 2011 by scanning products, images and labels.  

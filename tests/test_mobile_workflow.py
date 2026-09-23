@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Mobile Camera Workflow Verification Script
+MetroNetra — Mobile Camera Workflow Verification Script
 Simulates full field inspection workflow:
 1. Inspector Authentication
 2. Network IP discovery
@@ -26,7 +26,7 @@ def run_mobile_workflow_test():
     client = httpx.Client(base_url=API, timeout=120.0)
 
     print("=" * 60)
-    print("LEGALMET AI — Mobile Camera Workflow Test")
+    print("MetroNetra — Mobile Camera Workflow Test")
     print("=" * 60)
 
     # 1. Login

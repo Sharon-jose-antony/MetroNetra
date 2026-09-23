@@ -1,4 +1,4 @@
-# LEGALMET AI — Frontend Portal
+# MetroNetra — Frontend Portal
 
 **AI-Assisted Legal Metrology Compliance Inspection Platform (SIH26034)**
 

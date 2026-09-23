@@ -1,4 +1,4 @@
-# LEGALMET AI — Comprehensive Implementation Plan (SIH26034)
+# MetroNetra — Comprehensive Implementation Plan (SIH26034)
 **AI-Assisted Legal Metrology Inspection Platform**
 
 ## 1. Statutory Context & Legal Foundation

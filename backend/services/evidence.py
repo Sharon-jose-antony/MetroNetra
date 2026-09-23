@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Evidence Extraction Service
+MetroNetra — Evidence Extraction Service
 Generates cropped image evidence slices with annotated bounding boxes
 for each detected declaration.
 Every declaration result must be traceable back to the raw image evidence.

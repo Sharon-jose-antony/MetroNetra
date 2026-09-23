@@ -1,10 +1,10 @@
 @echo off
 chcp 65001 >nul
-title LEGALMET AI — Backend Server
+title MetroNetra — Backend Server
 cd /d "%~dp0"
 
 echo ================================================================
-echo   LEGALMET AI — AI-Assisted Legal Metrology Inspection Platform
+echo   MetroNetra — AI-Assisted Legal Metrology Inspection Platform
 echo   SIH Problem Statement ID: SIH26034
 echo   Ministry of Consumer Affairs, Food & Public Distribution
 echo ================================================================
@@ -38,6 +38,12 @@ echo.
 echo Press Ctrl+C to stop the server.
 echo ================================================================
 echo.
+
+:: Ensure port 8000 is free before starting
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":8000" ^| findstr "LISTENING"') do (
+    echo [*] Port 8000 is occupied by PID %%a. Freeing port...
+    taskkill /F /PID %%a >nul 2>&1
+)
 
 python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 

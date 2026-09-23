@@ -1,5 +1,6 @@
 """
-LEGALMET AI — FastAPI Application Entry Point
+MetroNetra — FastAPI Application Entry Point
+
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,7 +62,7 @@ def _seed_default_admin():
             db.commit()
             if settings.debug:
                 print("\n" + "=" * 60)
-                print("LEGALMET AI — Default accounts created (DEVELOPMENT ONLY)")
+                print("MetroNetra — Default accounts created (DEVELOPMENT ONLY)")
                 print("  Admin:     admin / Admin@1234!")
                 print("  Inspector: inspector1 / Inspector@1234!")
                 print("  CHANGE THESE IN PRODUCTION.")
@@ -78,12 +79,26 @@ async def lifespan(app: FastAPI):
     # Mount evidence image files as static files
     uploads_dir = os.path.abspath(settings.upload_dir)
     os.makedirs(uploads_dir, exist_ok=True)
+
+    # Pre-initialize and warm up PaddleOCR model once at application startup
+    try:
+        from backend.services.pipeline import get_ocr_provider
+        provider = get_ocr_provider()
+        if hasattr(provider, "warmup"):
+            provider.warmup()
+            print("[Startup] PaddleOCR model loaded and warmed up successfully.")
+        else:
+            provider.initialize()
+            print("[Startup] OCR provider initialized successfully.")
+    except Exception as e:
+        print(f"[Startup] OCR warmup notice: {e}")
+
     yield
     # Shutdown
 
 
 app = FastAPI(
-    title="LEGALMET AI",
+    title="MetroNetra",
     description=(
         "AI-Assisted Legal Metrology Inspection Platform — SIH Problem Statement SIH26034.\n\n"
         "**AI-Assisted Preliminary Assessment System.** "
@@ -126,7 +141,7 @@ def root():
     if os.path.exists(_frontend_index):
         return FileResponse(_frontend_index, media_type="text/html")
     return {
-        "service": "LEGALMET AI",
+        "service": "MetroNetra",
         "subtitle": "AI-Assisted Legal Metrology Inspection Platform",
         "problem_statement": "SIH26034",
         "docs": "/docs",
@@ -140,7 +155,7 @@ def root():
 @app.get("/api")
 def api_info():
     return {
-        "service": "LEGALMET AI API",
+        "service": "MetroNetra API",
         "subtitle": "AI-Assisted Legal Metrology Inspection Platform",
         "problem_statement": "SIH26034",
         "docs": "/docs",

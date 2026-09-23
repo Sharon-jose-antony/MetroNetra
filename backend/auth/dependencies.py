@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Auth dependency (FastAPI)
+MetroNetra — Auth dependency (FastAPI)
 Provides the `get_current_user` dependency for protected routes.
 """
 from fastapi import Depends, HTTPException, status

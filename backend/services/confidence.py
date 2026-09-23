@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Prototype Confidence Scoring Service
+MetroNetra — Prototype Confidence Scoring Service
 Computes a multi-signal weighted confidence score from pipeline components.
 
 IMPORTANT:

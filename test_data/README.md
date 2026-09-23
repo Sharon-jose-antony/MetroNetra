@@ -1,6 +1,6 @@
-# LEGALMET AI — Test Data & Benchmark Evaluation Guide
+# MetroNetra — Test Data & Benchmark Evaluation Guide
 
-This directory contains ground truth datasets, test image formats, and instructions for running accuracy and regression benchmarks for the **LEGALMET AI** compliance platform.
+This directory contains ground truth datasets, test image formats, and instructions for running accuracy and regression benchmarks for the **MetroNetra** compliance platform.
 
 ---
 

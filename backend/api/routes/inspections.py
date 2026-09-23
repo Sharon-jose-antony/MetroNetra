@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Inspections API Routes
+MetroNetra — Inspections API Routes
 POST   /api/inspections                     — Create new inspection
 POST   /api/inspections/{id}/upload         — Upload package image
 POST   /api/inspections/{id}/quality-check  — Run quality assessment
@@ -24,6 +24,7 @@ from backend.database.database import get_db
 from backend.database.models import (
     User, Inspection, InspectionImage, OCRResult as OCRResultModel,
     Declaration, RuleResult, Evidence as EvidenceModel,
+    FontAnalysisRecord, VisualElementRecord,
     ManualReview, Report, ProductCategory, InspectionStatus,
     DeclarationStatus, ReviewDecision
 )
@@ -31,7 +32,8 @@ from backend.schemas.schemas import (
     InspectionCreate, InspectionSummary, InspectionDetail,
     AnalysisResponse, ManualReviewCreate, ManualReviewRead,
     ImageQualityReport, EvidenceSchema, ConfidenceBreakdown,
-    DeclarationResult, RuleResultSchema
+    DeclarationResult, RuleResultSchema, FontAnalysisItemSchema,
+    VisualElementSchema
 )
 from backend.auth.dependencies import get_current_user
 from backend.services.image_quality import assess_quality
@@ -194,6 +196,8 @@ def analyze_inspection(
     db.query(Declaration).filter(Declaration.inspection_id == inspection.id).delete()
     db.query(RuleResult).filter(RuleResult.inspection_id == inspection.id).delete()
     db.query(EvidenceModel).filter(EvidenceModel.inspection_id == inspection.id).delete()
+    db.query(FontAnalysisRecord).filter(FontAnalysisRecord.inspection_id == inspection.id).delete()
+    db.query(VisualElementRecord).filter(VisualElementRecord.inspection_id == inspection.id).delete()
     db.flush()
 
     # Save OCR results
@@ -255,6 +259,47 @@ def analyze_inspection(
         )
         db.add(ev_row)
 
+    # Save font analysis
+    if result.font_analysis and result.font_analysis.items:
+        for item in result.font_analysis.items:
+            fa_row = FontAnalysisRecord(
+                inspection_id=inspection.id,
+                declaration_field=item.field,
+                text_height_px=item.text_height_px,
+                physical_size=item.physical_size,
+                readability=item.readability,
+                confidence=item.confidence,
+                status=item.status,
+                ocr_confidence=item.ocr_confidence,
+                contrast_score=item.contrast_score,
+                sharpness_score=item.sharpness_score,
+                bbox_json=item.bbox,
+                notes=item.notes,
+            )
+            db.add(fa_row)
+
+    # Save visual elements (QR codes and barcodes)
+    if result.visual_elements and result.visual_elements.items:
+        for ve in result.visual_elements.items:
+            ve_row = VisualElementRecord(
+                inspection_id=inspection.id,
+                source_image_id=img_record.id,
+                element_type=ve.element_type,
+                barcode_type=ve.barcode_type,
+                detection_status=ve.detection_status,
+                decode_status=ve.decode_status,
+                decoded_value=ve.decoded_value,
+                confidence=ve.confidence,
+                bbox_ymin=ve.bbox_ymin,
+                bbox_xmin=ve.bbox_xmin,
+                bbox_ymax=ve.bbox_ymax,
+                bbox_xmax=ve.bbox_xmax,
+                bbox_json=ve.bounding_box,
+                crop_file_path=ve.crop_file_path,
+                notes=ve.notes,
+            )
+            db.add(ve_row)
+
     db.commit()
 
     # Build response
@@ -267,6 +312,53 @@ def analyze_inspection(
             extraction_score=result.confidence.extraction_score,
             applicability_score=result.confidence.applicability_score,
         )
+
+    font_analysis_response = None
+    if result.font_analysis and result.font_analysis.items:
+        font_analysis_response = [
+            FontAnalysisItemSchema(
+                declaration_field=item.field,
+                text_height_px=item.text_height_px,
+                physical_size=item.physical_size,
+                readability=item.readability,
+                confidence=item.confidence,
+                status=item.status,
+                ocr_confidence=item.ocr_confidence,
+                contrast_score=item.contrast_score,
+                sharpness_score=item.sharpness_score,
+                bbox=item.bbox,
+                notes=item.notes,
+            ) for item in result.font_analysis.items
+        ]
+
+    visual_elements_response = []
+    if result.visual_elements and result.visual_elements.items:
+        visual_elements_response = [
+            VisualElementSchema(
+                element_type=ve.element_type,
+                barcode_type=ve.barcode_type,
+                detection_status=ve.detection_status,
+                decode_status=ve.decode_status,
+                decoded_value=ve.decoded_value,
+                confidence=ve.confidence,
+                bounding_box=ve.bounding_box,
+                crop_file_path=ve.crop_file_path,
+                notes=ve.notes,
+            )
+            for ve in result.visual_elements.items
+        ]
+
+    # Log final API response visual_elements as requested
+    ve_log = [
+        {
+            "element_type": ve.element_type,
+            "bounding_box": ve.bounding_box,
+            "decode_status": ve.decode_status,
+            "decoded_value": ve.decoded_value,
+        }
+        for ve in visual_elements_response
+    ]
+    print(f"visual_elements: {ve_log}")
 
     return AnalysisResponse(
         inspection_id=inspection_id,
@@ -294,8 +386,11 @@ def analyze_inspection(
                 details=r.details,
             ) for r in result.rule_results
         ],
+        font_analysis=font_analysis_response,
+        visual_elements=visual_elements_response,
         processing_time_seconds=result.processing_time_seconds,
         pipeline_stages=result.pipeline_stages,
+        timing_breakdown=result.timing_breakdown,
     )
 
 
@@ -345,6 +440,40 @@ def get_inspection(
         for r in inspection.rule_results
     ]
 
+    font_records = inspection.font_analysis_records or []
+    font_analysis_list = [
+        FontAnalysisItemSchema(
+            declaration_field=f.declaration_field,
+            text_height_px=f.text_height_px,
+            physical_size=f.physical_size or "Not calibrated",
+            readability=f.readability,
+            confidence=f.confidence,
+            status=f.status,
+            ocr_confidence=f.ocr_confidence,
+            contrast_score=f.contrast_score,
+            sharpness_score=f.sharpness_score,
+            bbox=f.bbox_json,
+            notes=f.notes,
+        )
+        for f in font_records
+    ] if font_records else None
+
+    ve_records = inspection.visual_element_records or []
+    visual_elements_list = [
+        VisualElementSchema(
+            element_type=v.element_type,
+            barcode_type=v.barcode_type,
+            detection_status=v.detection_status,
+            decode_status=v.decode_status,
+            decoded_value=v.decoded_value,
+            confidence=v.confidence,
+            bounding_box=v.bbox_json,
+            crop_file_path=v.crop_file_path,
+            notes=v.notes,
+        )
+        for v in ve_records
+    ] if ve_records else []
+
     return InspectionDetail(
         id=inspection.id,
         inspection_id=inspection.inspection_id,
@@ -360,6 +489,8 @@ def get_inspection(
         completed_at=inspection.completed_at,
         declarations=declarations,
         rule_results=rule_results,
+        font_analysis=font_analysis_list,
+        visual_elements=visual_elements_list,
     )
 
 
@@ -426,6 +557,130 @@ def get_evidence(
         )
         for e in evidence
     ]
+
+
+# ── Get Evidence Crop Image ───────────────────────────────────────────────────
+
+@router.get("/{inspection_id}/evidence/{declaration_field}/image")
+def get_evidence_image(
+    inspection_id: str,
+    declaration_field: str,
+    token: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """Serve the cropped image evidence slice for a statutory declaration."""
+    inspection = db.query(Inspection).filter(Inspection.inspection_id == inspection_id).first()
+    if not inspection:
+        raise HTTPException(status_code=404, detail="Inspection not found")
+
+    ev = db.query(EvidenceModel).filter(
+        EvidenceModel.inspection_id == inspection.id,
+        EvidenceModel.declaration_field == declaration_field,
+    ).first()
+    if not ev or not ev.crop_file_path or not os.path.exists(ev.crop_file_path):
+        # Fallback check visual_element_records
+        ve = db.query(VisualElementRecord).filter(
+            VisualElementRecord.inspection_id == inspection.id,
+            VisualElementRecord.element_type == declaration_field,
+        ).first()
+        if ve and ve.crop_file_path and os.path.exists(ve.crop_file_path):
+            return FileResponse(ve.crop_file_path, media_type="image/jpeg")
+        raise HTTPException(status_code=404, detail="Evidence image not found")
+
+    return FileResponse(ev.crop_file_path, media_type="image/jpeg")
+
+
+# ── Get Font Size & Readability Analysis ─────────────────────────────────────
+
+@router.get("/{inspection_id}/font-analysis")
+def get_inspection_font_analysis(
+    inspection_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Returns visual font size and text readability analysis for all statutory declarations.
+    Backward-compatible: returns available=False for legacy inspections.
+    """
+    inspection = db.query(Inspection).filter(Inspection.inspection_id == inspection_id).first()
+    if not inspection:
+        raise HTTPException(status_code=404, detail="Inspection not found")
+
+    records = inspection.font_analysis_records or []
+    if not records:
+        return {
+            "available": False,
+            "inspection_id": inspection_id,
+            "message": "Not available for this inspection",
+            "items": [],
+        }
+
+    return {
+        "available": True,
+        "inspection_id": inspection_id,
+        "calibration_status": "Not calibrated",
+        "items": [
+            {
+                "declaration_field": r.declaration_field,
+                "text_height_px": r.text_height_px,
+                "physical_size": r.physical_size or "Not calibrated",
+                "readability": r.readability,
+                "confidence": r.confidence,
+                "status": r.status,
+                "ocr_confidence": r.ocr_confidence,
+                "contrast_score": r.contrast_score,
+                "sharpness_score": r.sharpness_score,
+                "bbox": r.bbox_json,
+                "notes": r.notes,
+            }
+            for r in records
+        ],
+    }
+
+
+# ── Get Visual Elements (QR & Barcodes) ───────────────────────────────────
+
+@router.get("/{inspection_id}/visual-elements")
+def get_inspection_visual_elements(
+    inspection_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Returns detected QR codes and barcodes for the inspection.
+    Backward-compatible: returns available=False for older inspections.
+    """
+    inspection = db.query(Inspection).filter(Inspection.inspection_id == inspection_id).first()
+    if not inspection:
+        raise HTTPException(status_code=404, detail="Inspection not found")
+
+    records = inspection.visual_element_records or []
+    if not records:
+        return {
+            "available": False,
+            "inspection_id": inspection_id,
+            "message": "Visual element analysis not available for this inspection",
+            "items": [],
+        }
+
+    return {
+        "available": True,
+        "inspection_id": inspection_id,
+        "items": [
+            {
+                "element_type": r.element_type,
+                "barcode_type": r.barcode_type,
+                "detection_status": r.detection_status,
+                "decode_status": r.decode_status,
+                "decoded_value": r.decoded_value,
+                "confidence": r.confidence,
+                "bounding_box": r.bbox_json,
+                "crop_file_path": r.crop_file_path,
+                "notes": r.notes,
+            }
+            for r in records
+        ],
+    }
 
 
 # ── Get OCR Raw Tokens ─────────────────────────────────────────────────────────

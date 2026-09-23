@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Image Preprocessing & Multi-Variant Enhancement Service
+MetroNetra — Image Preprocessing & Multi-Variant Enhancement Service
 Applies resolution detection, automatic 3x–4x high-fidelity upscaling, and
 OpenCV transformations to dramatically improve OCR accuracy on small, blurry,
 glare-affected, and low-contrast package labels.

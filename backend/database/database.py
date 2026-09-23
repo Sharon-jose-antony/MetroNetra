@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Database Engine & Session
+MetroNetra — Database Engine & Session
 """
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Pydantic Schemas
+MetroNetra — Pydantic Schemas
 Request/Response models for all API endpoints.
 """
 from pydantic import BaseModel, Field, EmailStr
@@ -169,6 +169,40 @@ class InspectionSummary(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ── Font Size & Readability Analysis ──────────────────────────────────────────
+
+class FontAnalysisItemSchema(BaseModel):
+    declaration_field: str
+    text_height_px: Optional[int] = None
+    physical_size: str = "Not calibrated"
+    readability: str                    # READABLE | LOW READABILITY | REVIEW
+    confidence: float                   # 0.0 to 1.0
+    status: str                         # PASS | REVIEW | POTENTIAL_NON_COMPLIANCE
+    ocr_confidence: Optional[float] = None
+    contrast_score: Optional[float] = None
+    sharpness_score: Optional[float] = None
+    bbox: Optional[List[int]] = None
+    notes: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
+# ── Visual Elements (QR Codes & Barcodes) ──────────────────────────────────
+
+class VisualElementSchema(BaseModel):
+    element_type: str                   # "QR_CODE" or "BARCODE"
+    barcode_type: Optional[str] = None  # e.g. "EAN-13", "UPC-A", "QR Code"
+    detection_status: str = "DETECTED"  # "DETECTED" | "NOT_DETECTED"
+    decode_status: str                  # "SUCCESS" | "DETECTED_NOT_DECODED"
+    decoded_value: Optional[str] = None
+    confidence: Optional[float] = None
+    bounding_box: Optional[List[int]] = None  # [x1, y1, x2, y2]
+    crop_file_path: Optional[str] = None
+    notes: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
 class InspectionDetail(BaseModel):
     id: int
     inspection_id: str
@@ -185,6 +219,8 @@ class InspectionDetail(BaseModel):
     declarations: List[DeclarationResult] = []
     rule_results: List[RuleResultSchema] = []
     confidence_breakdown: Optional[ConfidenceBreakdown] = None
+    font_analysis: Optional[List[FontAnalysisItemSchema]] = None
+    visual_elements: Optional[List[VisualElementSchema]] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
 
@@ -196,8 +232,11 @@ class AnalysisResponse(BaseModel):
     confidence_breakdown: ConfidenceBreakdown
     declarations: List[DeclarationResult]
     rule_results: List[RuleResultSchema]
+    font_analysis: Optional[List[FontAnalysisItemSchema]] = None
+    visual_elements: Optional[List[VisualElementSchema]] = Field(default_factory=list)
     processing_time_seconds: float
     pipeline_stages: List[str]
+    timing_breakdown: Optional[dict] = None
     disclaimer: str = (
         "AI-assisted preliminary assessment based on submitted image evidence. "
         "This system does not replace statutory inspection, measurement or legal "

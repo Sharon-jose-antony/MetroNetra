@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Image Quality Assessment Service
+MetroNetra — Image Quality Assessment Service
 Computes objective quality metrics from a PIL Image or numpy array.
 All thresholds are loaded from config.py — no magic numbers here.
 """

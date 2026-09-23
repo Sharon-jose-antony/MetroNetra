@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Seed Demo Scenarios
+MetroNetra — Seed Demo Scenarios
 Generates synthetic label images and runs the 3 controlled demo scenarios:
   1. DEMO 1: High Compliance Packaged Food (PASS)
   2. DEMO 2: Difficult Low-Contrast / Glare Cosmetics (MANUAL_REVIEW)

@@ -32,6 +32,7 @@ htmlcov/
 *.db
 *.sqlite
 *.sqlite3
+metronetra.db
 legalmet_ai.db
 
 # ── Runtime Storage (keep directory structure, ignore dynamic uploads/reports)
@@ -66,6 +67,7 @@ weights/
 
 # ── Temporary & Scratch Files ─────────────────────────────────────────
 scratch/
+scratch_*.py
 tmp/
 temp/
 *.log

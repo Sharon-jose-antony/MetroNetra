@@ -1,5 +1,5 @@
 """
-LEGALMET AI — SQLAlchemy ORM Models (SQLite)
+MetroNetra — SQLAlchemy ORM Models (SQLite)
 Defines the relational database schema for the inspection platform.
 """
 from datetime import datetime
@@ -93,6 +93,8 @@ class Inspection(Base):
     declarations = relationship("Declaration", back_populates="inspection", cascade="all, delete-orphan")
     rule_results = relationship("RuleResult", back_populates="inspection", cascade="all, delete-orphan")
     evidence = relationship("Evidence", back_populates="inspection", cascade="all, delete-orphan")
+    font_analysis_records = relationship("FontAnalysisRecord", back_populates="inspection", cascade="all, delete-orphan")
+    visual_element_records = relationship("VisualElementRecord", back_populates="inspection", cascade="all, delete-orphan")
     manual_review = relationship("ManualReview", back_populates="inspection", uselist=False, cascade="all, delete-orphan")
     report = relationship("Report", back_populates="inspection", uselist=False, cascade="all, delete-orphan")
 
@@ -218,3 +220,48 @@ class Report(Base):
     generated_at = Column(DateTime, default=datetime.utcnow)
 
     inspection = relationship("Inspection", back_populates="report")
+
+
+class FontAnalysisRecord(Base):
+    __tablename__ = "font_analysis_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    inspection_id = Column(Integer, ForeignKey("inspections.id"), nullable=False)
+    declaration_field = Column(String(64), nullable=False)
+    text_height_px = Column(Integer, nullable=True)
+    physical_size = Column(String(64), default="Not calibrated")
+    readability = Column(String(32), nullable=False)   # READABLE, LOW READABILITY, REVIEW
+    confidence = Column(Float, nullable=False)
+    status = Column(String(32), nullable=False)        # PASS, REVIEW, POTENTIAL_NON_COMPLIANCE
+    ocr_confidence = Column(Float, nullable=True)
+    contrast_score = Column(Float, nullable=True)
+    sharpness_score = Column(Float, nullable=True)
+    bbox_json = Column(JSON, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    inspection = relationship("Inspection", back_populates="font_analysis_records")
+
+
+class VisualElementRecord(Base):
+    __tablename__ = "visual_element_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    inspection_id = Column(Integer, ForeignKey("inspections.id"), nullable=False)
+    source_image_id = Column(Integer, ForeignKey("inspection_images.id"), nullable=True)
+    element_type = Column(String(32), nullable=False)    # QR_CODE, BARCODE
+    barcode_type = Column(String(64), nullable=True)    # EAN-13, UPC-A, QR Code, etc.
+    detection_status = Column(String(32), nullable=False) # DETECTED, NOT_DETECTED
+    decode_status = Column(String(32), nullable=False)    # SUCCESS, DETECTED_NOT_DECODED
+    decoded_value = Column(Text, nullable=True)
+    confidence = Column(Float, nullable=True)
+    bbox_ymin = Column(Integer, nullable=True)
+    bbox_xmin = Column(Integer, nullable=True)
+    bbox_ymax = Column(Integer, nullable=True)
+    bbox_xmax = Column(Integer, nullable=True)
+    bbox_json = Column(JSON, nullable=True)             # [x1, y1, x2, y2]
+    crop_file_path = Column(String(512), nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    inspection = relationship("Inspection", back_populates="visual_element_records")

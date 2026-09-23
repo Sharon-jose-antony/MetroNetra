@@ -1,10 +1,10 @@
 @echo off
 chcp 65001 >nul
-title LEGALMET AI — Frontend Portal
+title MetroNetra — Frontend Portal
 cd /d "%~dp0"
 
 echo ================================================================
-echo   LEGALMET AI — Inspector Web Portal
+echo   MetroNetra — Inspector Web Portal
 echo   SIH Problem Statement ID: SIH26034
 echo ================================================================
 echo.

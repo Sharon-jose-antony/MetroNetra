@@ -1,4 +1,4 @@
-# LEGALMET AI — Backend Service
+# MetroNetra — Backend Service
 
 **AI-Assisted Legal Metrology Compliance Inspection Platform (SIH26034)**
 
@@ -66,7 +66,7 @@ cp backend/.env.example .env
 ```
 
 Key environment variables:
-- `DATABASE_URL`: SQLAlchemy connection string (default: `sqlite:///./legalmet_ai.db`).
+- `DATABASE_URL`: SQLAlchemy connection string (default: `sqlite:///./metronetra.db`).
 - `SECRET_KEY`: JWT signing secret key (minimum 32 characters).
 - `UPLOAD_DIR`: Directory for storing uploaded photos and evidence crops (default: `./data/uploads`).
 - `REPORTS_DIR`: Directory for generated PDF reports (default: `./data/reports`).
@@ -107,4 +107,4 @@ python tests/verify_e2e.py
 
 ## 📜 Statutory Legal Notice
 
-LEGALMET AI provides an **AI-assisted preliminary compliance assessment**. Assessments are based on computer vision, multi-pass optical character recognition, and statutory pattern matching. Final legal determinations and physical enforcement actions remain the statutory responsibility of authorized Legal Metrology officers under the Legal Metrology Act, 2009.
+MetroNetra provides an **AI-assisted preliminary compliance assessment**. Assessments are based on computer vision, multi-pass optical character recognition, and statutory pattern matching. Final legal determinations and physical enforcement actions remain the statutory responsibility of authorized Legal Metrology officers under the Legal Metrology Act, 2009.

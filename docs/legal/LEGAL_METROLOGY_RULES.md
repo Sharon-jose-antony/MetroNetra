@@ -1,4 +1,4 @@
-# LEGALMET AI — Statutory Legal Metrology References & Compliance Rules
+# MetroNetra — Statutory Legal Metrology References & Compliance Rules
 
 **SIH Problem Statement**: SIH26034  
 **Primary Statutory Authority**: Legal Metrology Act, 2009 read with Legal Metrology (Packaged Commodities) Rules, 2011 as amended.  
@@ -36,7 +36,7 @@ Under the **Legal Metrology (Packaged Commodities) Rules, 2011 (PCR 2011)**, eve
 
 ## 3. Product Category Applicability Matrix
 
-LEGALMET AI implements dynamic applicability filtering to avoid false non-compliance flags:
+MetroNetra implements dynamic applicability filtering to avoid false non-compliance flags:
 
 ```
 Category: PACKAGED_FOOD
@@ -82,4 +82,4 @@ Each rule record maintains full statutory provenance:
 
 ## 5. Evidentiary Disclaimer & Statutory Position
 
-> **Statutory Notice**: LEGALMET AI operates as an **AI-Assisted Preliminary Compliance Assessment System**. The software serves as an evidentiary aid and screening tool for enforcement officers; it does not replace statutory physical inspection, physical weighing/measurement verification, or final legal determinations by an authorized Legal Metrology Inspector under Section 15 of the Legal Metrology Act, 2009.
+> **Statutory Notice**: MetroNetra operates as an **AI-Assisted Preliminary Compliance Assessment System**. The software serves as an evidentiary aid and screening tool for enforcement officers; it does not replace statutory physical inspection, physical weighing/measurement verification, or final legal determinations by an authorized Legal Metrology Inspector under Section 15 of the Legal Metrology Act, 2009.

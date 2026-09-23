@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Authentication API Routes
+MetroNetra — Authentication API Routes
 POST /api/auth/login
 POST /api/auth/register  (admin only)
 GET  /api/auth/me

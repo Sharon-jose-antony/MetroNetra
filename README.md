@@ -1,4 +1,4 @@
-# LEGALMET AI — AI-Assisted Legal Metrology Compliance Inspection Platform
+# MetroNetra — AI-Assisted Legal Metrology Compliance Inspection Platform
 
 [![SIH26034](https://img.shields.io/badge/SIH-SIH26034-blue.svg)](https://www.sih.gov.in/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%200.110+-green.svg)](https://fastapi.tiangolo.com/)
@@ -52,7 +52,7 @@ Manual inspection across millions of retail SKUs and e-commerce listings is reso
 ---
 
 ## 2. Solution Overview
-**LEGALMET AI** is an evidentiary preliminary screening and assessment system designed for Legal Metrology enforcement inspectors. It combines:
+**MetroNetra** is an evidentiary preliminary screening and assessment system designed for Legal Metrology enforcement inspectors. It combines:
 1. **Automated Image Quality Assessment**: Evaluates resolution, Laplacian variance blur, dynamic range, and specular glare.
 2. **OpenCV Preprocessing Suite**: CLAHE, adaptive Gaussian thresholding, and unsharp masking for dot-matrix/faint print.
 3. **Multi-Pass OCR Fusion Engine**: Integrates PaddleOCR (with directional angle classification `use_angle_cls=True`) and EasyOCR.
@@ -60,7 +60,7 @@ Manual inspection across millions of retail SKUs and e-commerce listings is reso
 5. **Category-Aware Deterministic Rule Engine**: Evaluates active rules against the official consolidated PCR 2011 catalog.
 6. **Evidentiary PDF Generator**: Automatically formats preliminary inspection reports complete with cropped evidence thumbnails, legal citations, and inspector sign-off blocks.
 
-> **Statutory Notice**: LEGALMET AI operates as an **AI-Assisted Preliminary Compliance Assessment System**. Final legal determination and enforcement actions remain the statutory prerogative of authorized Legal Metrology Officers under Section 15 of the Legal Metrology Act, 2009.
+> **Statutory Notice**: MetroNetra operates as an **AI-Assisted Preliminary Compliance Assessment System**. Final legal determination and enforcement actions remain the statutory prerogative of authorized Legal Metrology Officers under Section 15 of the Legal Metrology Act, 2009.
 
 ---
 
@@ -155,7 +155,7 @@ Manual inspection across millions of retail SKUs and e-commerce listings is reso
 ## 5. Repository Structure
 
 ```
-legalmet_ai/
+metronetra/
 │
 ├── frontend/                        # Inspector Single-Page Application
 │   ├── index.html                   # Core frontend application & mobile UI
@@ -221,8 +221,8 @@ legalmet_ai/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-org/legalmet_ai.git
-   cd legalmet_ai
+   git clone https://github.com/your-org/metronetra.git
+   cd metronetra
    ```
 
 2. **Create and activate a virtual environment**:
@@ -269,11 +269,11 @@ cp frontend/.env.example frontend/.env
 
 Default `.env` configuration:
 ```env
-APP_NAME="LEGALMET AI"
+APP_NAME="MetroNetra"
 APP_ENV=development
 DEBUG=true
 SECRET_KEY=REPLACE_WITH_A_STRONG_RANDOM_SECRET_AT_LEAST_32_CHARS
-DATABASE_URL=sqlite:///./legalmet_ai.db
+DATABASE_URL=sqlite:///./metronetra.db
 UPLOAD_DIR=./data/uploads
 REPORTS_DIR=./data/reports
 OCR_PROVIDER=auto
@@ -329,7 +329,7 @@ python tests/test_mobile_workflow.py
 
 ## 12. Phone Camera Testing & Field Inspection
 
-LEGALMET AI supports direct mobile camera capture for field officers:
+MetroNetra supports direct mobile camera capture for field officers:
 1. Connect your smartphone to the same Wi-Fi network as the laptop/server.
 2. In the inspector sidebar, click the **Local Network IP** badge (or visit `/api/system/network`).
 3. Open the displayed URL (e.g. `http://192.168.1.50:8000/`) in your smartphone browser.

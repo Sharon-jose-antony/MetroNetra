@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Dashboard Analytics API
+MetroNetra — Dashboard Analytics API
 GET /api/dashboard/stats
 GET /api/rules
 """
@@ -70,4 +70,4 @@ def get_rules(current_user: User = Depends(get_current_user)):
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "service": "LEGALMET AI", "version": "1.0.0-mvp"}
+    return {"status": "ok", "service": "MetroNetra", "version": "1.0.0-mvp"}

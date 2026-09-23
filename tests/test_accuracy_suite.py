@@ -1,5 +1,5 @@
 """
-LEGALMET AI — Real Packaged Product Accuracy & Regression Benchmark Suite
+MetroNetra — Real Packaged Product Accuracy & Regression Benchmark Suite
 Evaluates 25 diverse real-world Indian packaged commodities across FMCG, Food,
 Personal Care, Cosmetics, and Household categories.
 
@@ -509,7 +509,7 @@ class TestPackagedProductBenchmark:
         field_stats = {}
 
         print("\n" + "=" * 70)
-        print("LEGALMET AI — Real Packaged Product Benchmark (SIH26034)")
+        print("MetroNetra — Real Packaged Product Benchmark (SIH26034)")
         print("=" * 70)
 
         for prod in BENCHMARK_DATASET:
